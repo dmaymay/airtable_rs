@@ -1,2 +1,2 @@
 # airtable_rs
-Airtable API Helper for Rust
+Airtable API helper for Rust
