@@ -17,9 +17,13 @@ impl AirtableClient {
         }
     }
 
+    pub async fn list_records(&self, table_name: &str) -> Result<(), AirtableError> {
+        crate::endpoints::records::list_records(self, table_name).await
+    }
+
     pub async fn placeholder(&self) -> Result<(), AirtableError> {
         // logic to call airtable endpoints
         Ok(())
-    }
+    }   
 
 }
