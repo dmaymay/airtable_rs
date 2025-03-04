@@ -23,14 +23,28 @@ pub async fn list_records(
         .get(&base_url)
         .header("Authorization", format!("Bearer {}", client.api_key));
 
-    // If `params.max_records` is Some, add it
+    // If `max_records` is Some, add `maxRecords=<value>`
     if let Some(mr) = params.max_records {
         base_request = base_request.query(&[("maxRecords", mr.to_string())]);
     }
 
-    // If `params.view` is Some, add it
+    // If `view` is Some, add `view=<value>`
     if let Some(ref v) = params.view {
         base_request = base_request.query(&[("view", v)]);
+    }
+
+    // If `fields` is Some, add `fields[]=fieldName` for each field
+    if let Some(ref fields_vec) = params.fields {
+        for field_name in fields_vec {
+            base_request = base_request.query(&[("fields[]", field_name)]);
+        }
+    }
+
+    // If `sort` is Some, add `sort[0][field]` and `sort[0][direction]`
+    if let Some((ref sort_field, ref sort_direction)) = params.sort {
+        base_request = base_request
+            .query(&[("sort[0][field]", sort_field)])
+            .query(&[("sort[0][direction]", sort_direction)]);
     }
 
     // in case of offset
