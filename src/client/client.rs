@@ -1,3 +1,4 @@
+use crate::types::records::Record;
 use super::error::AirtableError;
 
 /// The core Airtable client, responsible for making requests to the API.
@@ -17,7 +18,7 @@ impl AirtableClient {
         }
     }
 
-    pub async fn list_records(&self, table_name: &str) -> Result<(), AirtableError> {
+    pub async fn list_records(&self, table_name: &str) -> Result<Vec<Record>, AirtableError> {
         crate::endpoints::records::list_records(self, table_name).await
     }
 

@@ -1,9 +1,14 @@
-use crate::client::{AirtableClient, AirtableError};
+use crate::{
+    client::{AirtableClient, AirtableError},
+    types::records::{RecordList, Record},
+};
 
-/// List Airtable Records
 pub async fn list_records(
     client: &AirtableClient,
     table_name: &str,
-) -> Result<(), AirtableError> {
-    Ok(())
+) -> Result<Vec<Record>, AirtableError> {
+    // get request
+    // parse response
+    // what to do with offset?
+    Ok(vec![])
 }
