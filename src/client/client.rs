@@ -1,3 +1,5 @@
+use super::error::AirtableError;
+
 /// The core Airtable client, responsible for making requests to the API.
 pub struct AirtableClient {
     api_key: String,
@@ -15,7 +17,7 @@ impl AirtableClient {
         }
     }
 
-    pub async fn placeholder(&self) {
+    pub async fn placeholder(&self) -> Result<(), AirtableError> {
         // logic to call airtable endpoints
     }
 
