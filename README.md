@@ -1,4 +1,4 @@
-# airtable_rs
+# airtable_helper
 Airtable API helper for Rust
 
 # TO DO
@@ -29,7 +29,7 @@ Airtable API helper for Rust
 - Get Base Schema
 - Create Bases
 
-- Create Client (logged in with credential )
+- Create Client (logged in with credential etc )
 - Error Handling
 
 

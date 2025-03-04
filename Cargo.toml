@@ -1,11 +1,17 @@
 [package]
-name = "airtable_rs"
+name = "airtable_helper"
 version = "0.1.0"
 edition = "2021"
+description = "A Rust library to interact with Airtable."
+license = "MIT"
 
 [dependencies]
 dotenv = "0.15.0"
 reqwest = { version = "0.11", features = ["json"] }
-tokio = { version = "1", features = ["full"] }  # Required for async runtime
-serde = { version = "1", features = ["derive"] } # For JSON serialization/deserialization
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.139"
+
+[lib]
+name = "airtable_helper"
+path = "src/lib.rs"
