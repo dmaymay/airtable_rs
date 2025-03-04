@@ -19,6 +19,7 @@ impl AirtableClient {
 
     pub async fn placeholder(&self) -> Result<(), AirtableError> {
         // logic to call airtable endpoints
+        Ok(())
     }
 
 }
