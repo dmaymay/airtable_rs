@@ -2,14 +2,25 @@
 pub struct ListRecordsParams {
     pub view: Option<String>,
     pub max_records: Option<u32>,
+    pub fields: Option<Vec<String>>,
+    pub sort: Option<(String, String)>,
 }
 
-// Provide default values for these optional fields.
+// Default values for these optional fields.
 impl Default for ListRecordsParams {
     fn default() -> Self {
         Self {
             view: None,
             max_records: None,
+            sort: None,
+            fields: None,
         }
+    }
+}
+
+impl ListRecordsParams {
+    /// `new()` that just returns the default instance
+    pub fn new() -> Self {
+        Self::default()
     }
 }

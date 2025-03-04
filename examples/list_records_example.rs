@@ -20,14 +20,19 @@ async fn main() -> Result<(), AirtableError> {
         max_records: Some(50),
     }; */
 
-    let params = ListRecordsParams {
-        view: None,
-        max_records: Some(2),
-    };
-
+    /* let params = ListRecordsParams {
+        view: Some("Grid view".to_string()),
+        max_records: Some(3),
+        fields: Some(vec!["Name".to_string(), "created".to_string()]),
+        sort: Some(("Name".to_string(), "asc".to_string())),
+    }; */
+    
+    let mut params = ListRecordsParams::new();
+    params.fields = Some(vec!["Name".to_string(), "created".to_string()]);
     let records = client
         .list_records("Table 1", Some(params))
         .await?;
+
 
     println!("Fetched {} records", records.len());
     for record in records {
