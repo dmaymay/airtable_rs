@@ -29,6 +29,7 @@ async fn main() -> Result<(), AirtableError> {
     
     let mut params = ListRecordsParams::new();
     params.fields = Some(vec!["Name".to_string(), "created".to_string()]);
+    params.max_records = Some(4);
     let records = client
         .list_records("Table 1", Some(params))
         .await?;

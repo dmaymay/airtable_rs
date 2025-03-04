@@ -33,20 +33,6 @@ pub async fn list_records(
         base_request = base_request.query(&[("view", v)]);
     }
 
-     // If `fields` is Some, add `fields[]=fieldName` for each field
-     if let Some(ref fields_vec) = params.fields {
-        for field_name in fields_vec {
-            base_request = base_request.query(&[("fields[]", field_name)]);
-        }
-    }
-
-    // If `sort` is Some, add `sort[0][field]` and `sort[0][direction]`
-    if let Some((ref sort_field, ref sort_direction)) = params.sort {
-        base_request = base_request
-            .query(&[("sort[0][field]", sort_field)])
-            .query(&[("sort[0][direction]", sort_direction)]);
-    }
-
     // in case of offset
     loop {
         let mut request = base_request
