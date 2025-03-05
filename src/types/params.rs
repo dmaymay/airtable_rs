@@ -6,7 +6,7 @@ pub struct ListRecordsParams {
     pub sort: Option<(String, String)>,
 }
 
-// Default values for these optional fields.
+// Default values for these optional params.
 impl Default for ListRecordsParams {
     fn default() -> Self {
         Self {
