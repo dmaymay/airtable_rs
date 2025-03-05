@@ -30,11 +30,13 @@ async fn main() -> Result<(), AirtableError> {
     let mut params = ListRecordsParams::new();
     params.fields = Some(vec!["Name".to_string(), "created".to_string()]);
     params.max_records = Some(4);
+    let table_name = "Table 1";
+
     let records = client
-        .list_records("Table 1", Some(params))
+        .list_records(table_name, Some(params))
         .await?;
 
-
+    
     println!("Fetched {} records", records.len());
     for record in records {
         println!("Record ID: {}", record.id);

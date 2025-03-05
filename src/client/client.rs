@@ -1,6 +1,7 @@
-use crate::types::records::Record;
 use super::error::AirtableError;
+use crate::endpoints::records::{get_record, list_records};
 use crate::types::params::ListRecordsParams;
+use crate::types::records::Record;
 
 /// The core Airtable client, responsible for making requests to the API.
 pub struct AirtableClient {
@@ -26,17 +27,19 @@ impl AirtableClient {
     ) -> Result<Vec<Record>, AirtableError> {
         let params = params.unwrap_or_default();
 
-        crate::endpoints::records::list_records(
-            self,
-            table_name,
-            &params,
-        )
-        .await
+        list_records(self, table_name, &params).await
+    }
+
+    pub async fn get_record(
+        &self,
+        table_name: &str,
+        record_id: &str,
+    ) -> Result<Record, AirtableError> {
+        get_record(self, table_name, record_id).await
     }
 
     pub async fn placeholder(&self) -> Result<(), AirtableError> {
         // logic to call airtable endpoints
         Ok(())
-    }   
-
+    }
 }

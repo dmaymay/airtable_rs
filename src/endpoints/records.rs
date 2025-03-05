@@ -3,6 +3,8 @@ use crate::{
     types::params::ListRecordsParams,
     types::records::{Record, RecordList},
 };
+
+// Fetches all records from a  `table_name` with the given params
 pub async fn list_records(
     client: &AirtableClient,
     table_name: &str,
@@ -66,16 +68,50 @@ pub async fn list_records(
                 response.status()
             )));
         }
-
+        
         let record_list: RecordList = response.json().await?;
         all_records.extend(record_list.records);
 
         if let Some(off) = record_list.offset {
-            offset = Some(off);
+            offset = Some(off); 
         } else {
             break;
         }
     }
 
     Ok(all_records)
+}
+
+/// Fetches a single record by its `record_id` from the specified `table_name`.
+pub async fn get_record(
+    client: &AirtableClient,
+    table_name: &str,
+    record_id: &str,
+) -> Result<Record, AirtableError> {
+    let url = format!(
+        "https://api.airtable.com/v0/{base_id}/{table_name}/{record_id}",
+        base_id = client.base_id,
+        table_name = table_name,
+        record_id = record_id
+    );
+
+    // Build the request
+    let response = client
+        .http_client
+        .get(&url)
+        .header("Authorization", format!("Bearer {}", client.api_key))
+        .send()
+        .await?;
+
+    // Return Error in case of non success code
+    if !response.status().is_success() {
+        return Err(AirtableError::Other(format!(
+            "Error status code: {}",
+            response.status()
+        )));
+    }
+
+    let record: Record = response.json().await?;
+
+    Ok(record)
 }
