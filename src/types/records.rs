@@ -5,23 +5,24 @@ use std::fmt;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Record {
     /// The unique ID for this record.
-    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")] 
+    pub id: Option<String>,
     
     // for now fields as json 
     pub fields: serde_json::Value,
 
     /// Airtable generated value -> createdTime
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "createdTime")]
     pub created_time: Option<String>,
 }
 
 impl fmt::Display for Record {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // You decide how you want the display string to look:
         write!(
             f,
             "Record {{ id: {}, fields: {}, created_time: {:?} }}",
-            self.id,
+            self.id.clone().unwrap_or("".to_string()),
             self.fields,
             self.created_time
         )

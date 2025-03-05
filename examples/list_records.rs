@@ -39,7 +39,7 @@ async fn main() -> Result<(), AirtableError> {
     
     println!("Fetched {} records", records.len());
     for record in records {
-        println!("Record ID: {}", record.id);
+        println!("Record ID: {:?}", record.id);
         println!("fields: {}", record.fields);
     }
 

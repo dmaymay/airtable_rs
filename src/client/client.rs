@@ -1,5 +1,5 @@
 use super::error::AirtableError;
-use crate::endpoints::records::{get_record, list_records};
+use crate::endpoints::records::{get_record, list_records, create_records};
 use crate::types::params::ListRecordsParams;
 use crate::types::records::Record;
 
@@ -36,6 +36,14 @@ impl AirtableClient {
         record_id: &str,
     ) -> Result<Record, AirtableError> {
         get_record(self, table_name, record_id).await
+    }
+
+    pub async fn create_records(
+        &self,
+        table_name: &str,
+        records: &[Record],
+    ) -> Result<Vec<Record>, AirtableError> {
+        create_records(self, table_name, records).await
     }
 
     pub async fn placeholder(&self) -> Result<(), AirtableError> {

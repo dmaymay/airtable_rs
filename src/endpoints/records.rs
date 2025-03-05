@@ -4,6 +4,8 @@ use crate::{
     types::records::{Record, RecordList},
 };
 
+use serde_json::json;
+
 // Fetches all records from a  `table_name` with the given params
 pub async fn list_records(
     client: &AirtableClient,
@@ -114,4 +116,41 @@ pub async fn get_record(
     let record: Record = response.json().await?;
 
     Ok(record)
+
+
+    
+}
+
+pub async fn create_records(
+    client: &AirtableClient,
+    table_name: &str,
+    records: &[Record],
+) -> Result<Vec<Record>, AirtableError> {
+    // Build base request
+    let url = format!("https://api.airtable.com/v0/{}/{}", client.base_id, table_name);
+    let body = json!({ "records": records });
+
+    // POST request
+    let response = client
+        .http_client
+        .post(&url)
+        .header("Authorization", format!("Bearer {}", client.api_key))
+        .json(&body)
+        .send()
+        .await?;
+
+    // Return Error in case of non success code
+    if !response.status().is_success() {
+        return Err(AirtableError::Other(format!(
+            "Create failed, status: {}",
+            response.status()
+        )));
+    }
+
+    let json_resp: serde_json::Value = response.json().await?;
+
+    // "records" -> an array of updated record objects.
+    let created_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
+
+    Ok(created_records)
 }
