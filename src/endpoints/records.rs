@@ -3,7 +3,6 @@ use crate::{
     client::error::handle_airtable_error,
     types::params::ListRecordsParams,
     types::records::{Record, RecordList},
-    
 };
 
 use serde_json::json;

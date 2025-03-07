@@ -8,6 +8,7 @@ pub struct AirtableClient {
     pub api_key: String,
     pub base_id: String,
     pub http_client: reqwest::Client,
+    pub typecast:  Option<bool>
 }
 
 impl AirtableClient {
@@ -17,6 +18,7 @@ impl AirtableClient {
             api_key: api_key.to_string(),
             base_id: base_id.to_string(),
             http_client: reqwest::Client::new(),
+            typecast: Some(true)
         }
     }
 
@@ -54,7 +56,9 @@ impl AirtableClient {
         update_records(self, table_name, records).await
     }
 
-    pub async fn upload_records(
+
+    // No General upload function for now -> painful error handling
+/*     pub async fn upload_records(
         &self,
         table_name: &str,
         records: &[Record],
@@ -76,5 +80,5 @@ impl AirtableClient {
     pub async fn placeholder(&self) -> Result<(), AirtableError> {
         // logic to call airtable endpoints
         Ok(())
-    }
+    } */
 }
