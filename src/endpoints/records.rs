@@ -1,7 +1,9 @@
 use crate::{
     client::{AirtableClient, AirtableError},
+    client::error::handle_airtable_error,
     types::params::ListRecordsParams,
     types::records::{Record, RecordList},
+    
 };
 
 use serde_json::json;
@@ -65,17 +67,15 @@ pub async fn list_records(
 
         // Return Error in case of non success code
         if !response.status().is_success() {
-            return Err(AirtableError::Other(format!(
-                "Error status code: {}",
-                response.status()
-            )));
+            let err = handle_airtable_error(response, "List records").await;
+            return Err(err);
         }
-        
+
         let record_list: RecordList = response.json().await?;
         all_records.extend(record_list.records);
 
         if let Some(off) = record_list.offset {
-            offset = Some(off); 
+            offset = Some(off);
         } else {
             break;
         }
@@ -105,20 +105,15 @@ pub async fn get_record(
         .send()
         .await?;
 
-    // Return Error in case of non success code
-    if !response.status().is_success() {
-        return Err(AirtableError::Other(format!(
-            "Error status code: {}",
-            response.status()
-        )));
-    }
+        // Return Error in case of non success code
+        if !response.status().is_success() {
+            let err = handle_airtable_error(response, "Get single record").await;
+            return Err(err);
+        }
 
     let record: Record = response.json().await?;
 
     Ok(record)
-
-
-    
 }
 
 pub async fn create_records(
@@ -126,31 +121,81 @@ pub async fn create_records(
     table_name: &str,
     records: &[Record],
 ) -> Result<Vec<Record>, AirtableError> {
+    let mut all_created_records = Vec::new();
+
     // Build base request
-    let url = format!("https://api.airtable.com/v0/{}/{}", client.base_id, table_name);
-    let body = json!({ "records": records });
+    let url = format!(
+        "https://api.airtable.com/v0/{}/{}",
+        client.base_id, table_name
+    );
 
-    // POST request
-    let response = client
-        .http_client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", client.api_key))
-        .json(&body)
-        .send()
-        .await?;
+    for chunk in records.chunks(10) {
+        let body = json!({ "records": chunk });
 
-    // Return Error in case of non success code
-    if !response.status().is_success() {
-        return Err(AirtableError::Other(format!(
-            "Create failed, status: {}",
-            response.status()
-        )));
+        // POST request
+        let response = client
+            .http_client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", client.api_key))
+            .json(&body)
+            .send()
+            .await?;
+        println!("sent chunk {}", chunk.len());
+
+        // Return Error in case of non success code
+        if !response.status().is_success() {
+            let err = handle_airtable_error(response, "Create records").await;
+            return Err(err);
+        }
+
+        let json_resp: serde_json::Value = response.json().await?;
+
+        // "records" -> an array of updated record objects.
+        let created_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
+        all_created_records.extend(created_records);
+        
     }
+    Ok(all_created_records)
+}
 
-    let json_resp: serde_json::Value = response.json().await?;
+pub async fn update_records(
+    client: &AirtableClient,
+    table_name: &str,
+    records: &[Record],
+) -> Result<Vec<Record>, AirtableError> {
+    let mut all_updated_records = Vec::new();
 
-    // "records" -> an array of updated record objects.
-    let created_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
+    // Build base request
+    let url = format!(
+        "https://api.airtable.com/v0/{}/{}",
+        client.base_id, table_name
+    );
 
-    Ok(created_records)
+    for chunk in records.chunks(10) {
+        let body = json!({ "records": chunk });
+
+        // POST request
+        let response = client
+            .http_client
+            .patch(&url)
+            .header("Authorization", format!("Bearer {}", client.api_key))
+            .json(&body)
+            .send()
+            .await?;
+        println!("sent chunk {}", chunk.len());
+        
+        // Return Error in case of non success code
+        if !response.status().is_success() {
+            let err = handle_airtable_error(response, "Update records").await;
+            return Err(err);
+        }
+
+        let json_resp: serde_json::Value = response.json().await?;
+
+        // "records" -> an array of updated record objects.
+        let updated_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
+        all_updated_records.extend(updated_records);
+        
+    }
+    Ok(all_updated_records)
 }

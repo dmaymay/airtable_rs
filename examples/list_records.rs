@@ -28,8 +28,8 @@ async fn main() -> Result<(), AirtableError> {
     }; */
     
     let mut params = ListRecordsParams::new();
-    params.fields = Some(vec!["Name".to_string(), "created".to_string()]);
-    params.max_records = Some(4);
+    /* params.fields = Some(vec!["Name".to_string(), "created".to_string()]);
+    params.max_records = Some(4); */
     let table_name = "Table 1";
 
     let records = client
