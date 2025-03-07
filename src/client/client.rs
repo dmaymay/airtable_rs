@@ -1,5 +1,5 @@
 use super::error::AirtableError;
-use crate::endpoints::records::{get_record, list_records, create_records, update_records};
+use crate::endpoints::records::{create_records, get_record, list_records, update_records};
 use crate::types::params::ListRecordsParams;
 use crate::types::records::Record;
 
@@ -52,6 +52,25 @@ impl AirtableClient {
         records: &[Record],
     ) -> Result<Vec<Record>, AirtableError> {
         update_records(self, table_name, records).await
+    }
+
+    pub async fn upload_records(
+        &self,
+        table_name: &str,
+        records: &[Record],
+    ) -> Result<Vec<Record>, AirtableError> {
+        let (new, existing): (Vec<_>, Vec<_>) =
+            records.iter().cloned().partition(|r| r.id.is_none());
+        let mut all = Vec::new();
+
+        if !new.is_empty() {
+            all.extend(create_records(self, table_name, &new).await?);
+        }
+        if !existing.is_empty() {
+            all.extend(update_records(self, table_name, &existing).await?);
+        }
+
+        Ok(all)
     }
 
     pub async fn placeholder(&self) -> Result<(), AirtableError> {

@@ -140,7 +140,6 @@ pub async fn create_records(
             .json(&body)
             .send()
             .await?;
-        println!("sent chunk {}", chunk.len());
 
         // Return Error in case of non success code
         if !response.status().is_success() {
@@ -182,7 +181,6 @@ pub async fn update_records(
             .json(&body)
             .send()
             .await?;
-        println!("sent chunk {}", chunk.len());
         
         // Return Error in case of non success code
         if !response.status().is_success() {
