@@ -62,7 +62,7 @@ pub async fn list_records(
             request = request.query(&[("offset", off)]);
         }
 
-        // Send the request
+        // Get request
         let response = request.send().await?;
 
         // Return Error in case of non success code
@@ -97,7 +97,7 @@ pub async fn get_record(
         record_id = record_id
     );
 
-    // Build the request
+    // GET request
     let response = client
         .http_client
         .get(&url)
@@ -174,7 +174,7 @@ pub async fn update_records(
     for chunk in records.chunks(10) {
         let body = json!({ "records": chunk });
 
-        // POST request
+        // PATCH request
         let response = client
             .http_client
             .patch(&url)
