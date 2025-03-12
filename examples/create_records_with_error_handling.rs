@@ -28,7 +28,7 @@ async fn main() -> Result<(), AirtableError> {
         fields: json!({ "Name": "Bob" }),
         created_time: None,
     };
-    let new_records = vec![rec2.clone(), rec1.clone()];
+    let new_records = vec![rec1, rec2];
 
     // We'll keep track of both created and remaining records
     let mut created_records: Option<Vec<Record>> = None;
