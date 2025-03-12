@@ -1,6 +1,7 @@
 use reqwest::Response;
 use serde_json::Value;
 use thiserror::Error;
+use crate::types::records::Record;
 
 // General error handling
 #[derive(Debug, Error)]
@@ -13,6 +14,16 @@ pub enum AirtableError {
 
     #[error("Other error occurred: {0}")]
     Other(String),
+
+    #[error("Partial success: processed {processed_count} records, then failed.\nError: {message}")]
+    PartialSuccessError {
+        /// Records that successfully got processed (created/updated) before the error
+        processed: Vec<Record>,
+        /// Records that were not processed yet (including the chunk that failed)
+        remaining: Vec<Record>,
+        processed_count: usize,
+        message: String,
+    }   
 }
 
 pub async fn handle_airtable_error(response: Response, operation_desc: &str) -> AirtableError {

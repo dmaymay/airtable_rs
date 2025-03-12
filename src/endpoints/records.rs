@@ -1,11 +1,11 @@
 use crate::{
-    client::{AirtableClient, AirtableError},
     client::error::handle_airtable_error,
+    client::{AirtableClient, AirtableError},
     types::params::ListRecordsParams,
     types::records::{Record, RecordList},
 };
 
-use serde_json::json;
+use serde_json::{json, Value};
 
 // Fetches all records from a  `table_name` with the given params
 pub async fn list_records(
@@ -104,11 +104,11 @@ pub async fn get_record(
         .send()
         .await?;
 
-        // Return Error in case of non success code
-        if !response.status().is_success() {
-            let err = handle_airtable_error(response, "Get single record").await;
-            return Err(err);
-        }
+    // Return Error in case of non success code
+    if !response.status().is_success() {
+        let err = handle_airtable_error(response, "Get single record").await;
+        return Err(err);
+    }
 
     let record: Record = response.json().await?;
 
@@ -120,15 +120,18 @@ pub async fn create_records(
     table_name: &str,
     records: &[Record],
 ) -> Result<Vec<Record>, AirtableError> {
-    let mut all_created_records = Vec::new();
+
+    let mut processed = Vec::new();
+    let remaining = records.to_vec();
+
+    let mut offset = 0;
 
     // Build base request
-    let url = format!(
-        "https://api.airtable.com/v0/{}/{}",
-        client.base_id, table_name
-    );
+    let url = format!("https://api.airtable.com/v0/{}/{}", client.base_id, table_name);
 
-    for chunk in records.chunks(10) {
+    while offset < remaining.len() {
+        let chunk_end = (offset + 10).min(remaining.len());
+        let chunk = &remaining[offset..chunk_end];
         let body = json!({ "records": chunk });
 
         // POST request
@@ -140,36 +143,53 @@ pub async fn create_records(
             .send()
             .await?;
 
-        // Return Error in case of non success code
         if !response.status().is_success() {
-            let err = handle_airtable_error(response, "Create records").await;
-            return Err(err);
+            // Construct partial success error
+            let err_message = handle_airtable_error(response, "Create records").await.to_string();
+
+            // Return an error variant with partial success data
+            let processed_count = processed.len();
+            return Err(AirtableError::PartialSuccessError {
+                processed_count,
+                processed,
+                remaining: remaining[offset..].to_vec(),
+                message: err_message,
+            });
         }
 
-        let json_resp: serde_json::Value = response.json().await?;
+        // Success: parse the JSON
+        let json_resp: Value = response.json().await?;
+        let created_chunk: Vec<Record> = serde_json::from_value(
+            json_resp["records"].clone()
+        )?;
 
-        // "records" -> an array of updated record objects.
-        let created_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
-        all_created_records.extend(created_records);
-        
+        // Extend our 'processed' list
+        processed.extend(created_chunk);
+
+        // Advance offset to move to the next chunk
+        offset = chunk_end;
     }
-    Ok(all_created_records)
+
+    // Return the processed records
+    Ok(processed)
 }
+
 
 pub async fn update_records(
     client: &AirtableClient,
     table_name: &str,
     records: &[Record],
 ) -> Result<Vec<Record>, AirtableError> {
-    let mut all_updated_records = Vec::new();
+    let mut processed = Vec::new();
+    let remaining = records.to_vec();
+    let mut offset = 0;
 
     // Build base request
-    let url = format!(
-        "https://api.airtable.com/v0/{}/{}",
-        client.base_id, table_name
-    );
+    let url = format!("https://api.airtable.com/v0/{}/{}", client.base_id, table_name);
 
-    for chunk in records.chunks(10) {
+    while offset < remaining.len() {
+        let chunk_end = (offset + 10).min(remaining.len());
+        let chunk = &remaining[offset..chunk_end];
         let body = json!({ "records": chunk });
 
         // PATCH request
@@ -180,19 +200,32 @@ pub async fn update_records(
             .json(&body)
             .send()
             .await?;
-        
-        // Return Error in case of non success code
+
         if !response.status().is_success() {
-            let err = handle_airtable_error(response, "Update records").await;
-            return Err(err);
+            // Construct partial success error
+            let err_message = handle_airtable_error(response, "Update records").await.to_string();
+            let processed_count = processed.len();
+            // Return an error variant with partial success data
+            return Err(AirtableError::PartialSuccessError {
+                processed_count,
+                processed,
+                remaining: remaining[offset..].to_vec(),
+                message: err_message,
+            });
         }
 
-        let json_resp: serde_json::Value = response.json().await?;
+        // Success: parse the JSON
+        let json_resp: Value = response.json().await?;
+        let updated_chunk: Vec<Record> =
+            serde_json::from_value(json_resp["records"].clone())?;
 
-        // "records" -> an array of updated record objects.
-        let updated_records: Vec<Record> = serde_json::from_value(json_resp["records"].clone())?;
-        all_updated_records.extend(updated_records);
-        
+        // Extend our 'processed' list
+        processed.extend(updated_chunk);
+
+        // Advance offset to move to the next chunk
+        offset = chunk_end;
     }
-    Ok(all_updated_records)
+
+    // Return the processed records
+    Ok(processed)
 }
